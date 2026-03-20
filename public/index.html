@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{COMPANY_NAME}}</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Inter, -apple-system, sans-serif; background: #050f07; color: #f0fdf4; }
+  nav { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 2.5rem; border-bottom: 1px solid rgba(34,197,94,0.15); }
+  .logo { font-weight: 700; font-size: 1.3rem; color: #22c55e; }
+  .nav-cta { background: #22c55e; color: #050f07; padding: 0.6rem 1.4rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+  .hero { max-width: 800px; margin: 5rem auto; padding: 0 2rem; text-align: center; }
+  h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; }
+  h1 span { color: #22c55e; }
+  .subtitle { font-size: 1.15rem; color: #86efac; line-height: 1.7; max-width: 600px; margin: 0 auto 2.5rem; }
+  .cta-group { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  .btn-primary { background: #22c55e; color: #050f07; padding: 0.9rem 2rem; border-radius: 10px; font-weight: 700; font-size: 1rem; text-decoration: none; border: none; cursor: pointer; }
+  .btn-secondary { background: transparent; color: #22c55e; padding: 0.9rem 2rem; border-radius: 10px; font-weight: 600; font-size: 1rem; text-decoration: none; border: 1px solid rgba(34,197,94,0.4); }
+  .subscribe-form { display: flex; gap: 0.75rem; margin-top: 3rem; max-width: 420px; margin-left: auto; margin-right: auto; }
+  .subscribe-form input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(34,197,94,0.3); border-radius: 8px; padding: 0.8rem 1rem; color: #f0fdf4; font-size: 0.95rem; outline: none; }
+  .subscribe-form input::placeholder { color: #6b8f71; }
+  .subscribe-form button { background: #22c55e; color: #050f07; border: none; border-radius: 8px; padding: 0.8rem 1.4rem; font-weight: 700; cursor: pointer; }
+  .success-msg { display: none; color: #22c55e; margin-top: 0.75rem; font-size: 0.9rem; }
+  footer { text-align: center; padding: 3rem; color: #6b8f71; font-size: 0.85rem; border-top: 1px solid rgba(34,197,94,0.1); margin-top: 5rem; }
+  footer a { color: #22c55e; text-decoration: none; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">{{COMPANY_NAME}}</div>
+  <a href="#subscribe" class="nav-cta">Get Started</a>
+</nav>
+<div class="hero">
+  <h1>{{HEADLINE}}</h1>
+  <p class="subtitle">{{SUBTITLE}}</p>
+  <div class="cta-group">
+    <a href="#subscribe" class="btn-primary">Get Early Access</a>
+    <a href="mailto:{{CONTACT_EMAIL}}" class="btn-secondary">Contact Us</a>
+  </div>
+  <div id="subscribe" class="subscribe-form">
+    <input type="email" id="email-input" placeholder="Enter your email" />
+    <button onclick="subscribe()">Join</button>
+  </div>
+  <div class="success-msg" id="success-msg">✓ You're on the list!</div>
+</div>
+<footer>
+  <p>© 2025 {{COMPANY_NAME}} · <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a></p>
+  <p style="margin-top:0.5rem">Powered by <a href="https://delegram.app">Delegram</a></p>
+</footer>
+<script>
+async function subscribe() {
+  const email = document.getElementById('email-input').value
+  if (!email) return
+  await fetch('/api/subscribe', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({email}) })
+  document.getElementById('success-msg').style.display = 'block'
+  document.getElementById('email-input').value = ''
+}
+// Track page view
+fetch('/api/track', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({event_type:'page_view', page: window.location.pathname}) }).catch(()=>{})
+</script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — {{COMPANY_NAME}}</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Inter, sans-serif; background: #fff; color: #000; font-size: 13px; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid #e5e5e5; }
+  header h1 { font-size: 16px; font-weight: 700; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; padding: 20px; }
+  .card { border: 1px solid #e5e5e5; border-radius: 8px; padding: 16px; }
+  .card h2 { font-size: 11px; color: #999; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .card .value { font-size: 28px; font-weight: 800; }
+  table { width: 100%; border-collapse: collapse; margin: 0 20px; width: calc(100% - 40px); }
+  th { text-align: left; padding: 8px 12px; font-size: 11px; color: #999; border-bottom: 1px solid #e5e5e5; }
+  td { padding: 8px 12px; border-bottom: 1px solid #f5f5f5; font-size: 12px; }
+  .section-title { font-size: 14px; font-weight: 700; padding: 20px 20px 10px; }
+  #login { position: fixed; inset: 0; background: #fff; display: flex; align-items: center; justify-content: center; z-index: 100; }
+  #login form { max-width: 320px; width: 100%; }
+  #login h2 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+  #login input { width: 100%; border: 1px solid #ccc; border-radius: 6px; padding: 10px; margin-bottom: 12px; font-size: 14px; }
+  #login button { width: 100%; background: #000; color: #fff; border: none; border-radius: 6px; padding: 10px; font-weight: 700; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="login">
+  <form onsubmit="doLogin(event)">
+    <h2>Admin Login</h2>
+    <input type="password" id="key-input" placeholder="Admin key" />
+    <button type="submit">Login</button>
+  </form>
+</div>
+<div id="app" style="display:none">
+  <header>
+    <h1 id="company-name">Admin Dashboard</h1>
+    <span id="last-updated" style="color:#999;font-size:11px"></span>
+  </header>
+  <div class="grid">
+    <div class="card"><h2>Subscribers</h2><div class="value" id="stat-subs">—</div></div>
+    <div class="card"><h2>Orders</h2><div class="value" id="stat-orders">—</div></div>
+    <div class="card"><h2>Revenue</h2><div class="value" id="stat-revenue">—</div></div>
+    <div class="card"><h2>Page Views</h2><div class="value" id="stat-views">—</div></div>
+  </div>
+  <div class="section-title">Recent Subscribers</div>
+  <table><thead><tr><th>Email</th><th>Source</th><th>Date</th></tr></thead><tbody id="subs-table"></tbody></table>
+  <div class="section-title">Recent Orders</div>
+  <table><thead><tr><th>Email</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody id="orders-table"></tbody></table>
+</div>
+<script>
+let ADMIN_KEY = ''
+function doLogin(e) {
+  e.preventDefault()
+  ADMIN_KEY = document.getElementById('key-input').value
+  loadData()
+}
+async function loadData() {
+  const headers = { 'x-admin-key': ADMIN_KEY }
+  const [stats, subs, orders] = await Promise.all([
+    fetch('/api/admin/stats', { headers }).then(r => r.json()),
+    fetch('/api/admin/subscribers', { headers }).then(r => r.json()),  // Note: fixed endpoint
+    fetch('/api/admin/orders', { headers }).then(r => r.json()),
+  ])
+  if (stats.error) return alert('Wrong key')
+  document.getElementById('login').style.display = 'none'
+  document.getElementById('app').style.display = 'block'
+  document.getElementById('stat-subs').textContent = stats.subscribers || 0
+  document.getElementById('stat-orders').textContent = stats.orders || 0
+  document.getElementById('stat-revenue').textContent = '$' + ((stats.revenue_cents || 0) / 100).toFixed(2)
+  document.getElementById('stat-views').textContent = stats.page_views || 0
+  document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString()
+  document.getElementById('subs-table').innerHTML = (subs.subscribers || []).slice(0,20).map(s =>
+    `<tr><td>${s.email}</td><td>${s.source||''}</td><td>${new Date(s.created_at).toLocaleDateString()}</td></tr>`
+  ).join('')
+  document.getElementById('orders-table').innerHTML = (orders.orders || []).slice(0,20).map(o =>
+    `<tr><td>${o.customer_email}</td><td>$${(o.amount_cents/100).toFixed(2)}</td><td>${o.status}</td><td>${new Date(o.created_at).toLocaleDateString()}</td></tr>`
+  ).join('')
+}
+</script>
+</body>
+</html>
